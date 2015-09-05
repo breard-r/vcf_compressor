@@ -29,7 +29,7 @@ usage () {
     echo ""
     echo "Options:"
     echo "  -o, --output"
-    echo "  -V, --version"
+    echo "  --version"
     echo "  -h, --help"
     exit "$exit_status"
 }
@@ -68,7 +68,7 @@ while :; do
                 usage
             fi
             ;;
-        -V|--version)
+        --version)
             version
             ;;
         -h|--help)
