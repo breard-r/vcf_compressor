@@ -29,21 +29,32 @@ usage () {
     echo ""
     echo "Options:"
     echo "  -o, --output"
-    echo "  -v, --verbose"
     echo "  -V, --version"
     echo "  -h, --help"
     exit "$exit_status"
 }
 
-echo_verbose () {
-    if [ $verbose -gt 0 ]; then
-        echo "$@"
+compress_photo () {
+    line="$1"
+
+    prefix=$(echo "$line" | cut -d ":" -f1)
+    picture=$(echo "$line" | cut -d ":" -f2 | base64 -d | convert "-" -quality 50 -resize "300x300>" "-" | base64 -w0)
+    echo "$prefix:$picture"
+}
+
+process_line () {
+    line="$1"
+
+    echo "$line" | egrep "^PHOTO;" >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        compress_photo "$line"
+    else
+        echo "$line"
     fi
 }
 
 input_file=""
 output_file=""
-verbose=0
 
 while :; do
     test $# -gt 0 || break
@@ -56,10 +67,6 @@ while :; do
             else
                 usage
             fi
-            ;;
-        -v|--verbose)
-            verbose=1
-            shift
             ;;
         -V|--version)
             version
@@ -79,12 +86,19 @@ while :; do
     esac
 done
 test -z "$input_file" && usage
+if [ ! -f "$input_file" ]; then
+    echo "$input_file: file not found"
+    exit 1
+fi
 if [ -z "$output_file" ]; then
     dir=$(dirname "$input_file")
     name=$(basename "$input_file" ".vcf")
     output_file="$dir/$name.new.vcf"
 fi
 
-echo "in:  $input_file"
-echo "out: $output_file"
-echo_verbose "verbose mode on"
+echo -n > "$output_file"
+
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    line=$(process_line "$line")
+    echo "$line" >> "$output_file"
+done < "$input_file"
