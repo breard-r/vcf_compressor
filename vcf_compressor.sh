@@ -45,7 +45,7 @@ compress_photo () {
 process_line () {
     line="$1"
 
-    echo "$line" | egrep "^PHOTO;" >/dev/null 2>&1
+    echo "$line" | egrep "^PHOTO;" | grep ";ENCODING=b;" >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         compress_photo "$line"
     else
