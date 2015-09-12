@@ -48,7 +48,7 @@ compress_photo () {
     prefix=$(echo "$line" | cut -d ":" -f1)
     width=$(raw_img "$line" | identify -format '%w' -)
     height=$(raw_img "$line" | identify -format '%h' -)
-    if [ "$width" -le "$max_width" ] && [ "$height" -le "$max_height" ] ; then
+    if [ "$width" -gt "$max_width" ] || [ "$height" -gt "$max_height" ] ; then
         picture=$(raw_img "$line" | convert "-" -quality 50 -resize "${max_width}x${max_height}>" "-" | base64 -w0)
         echo "$prefix:$picture"
     else
