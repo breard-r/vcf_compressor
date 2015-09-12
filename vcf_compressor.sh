@@ -34,12 +34,26 @@ usage () {
     exit "$exit_status"
 }
 
-compress_photo () {
+raw_img () {
     line="$1"
 
+    echo "$line" | cut -d ":" -f2 | base64 -d
+}
+
+compress_photo () {
+    line="$1"
+    max_width="300"
+    max_height="300"
+
     prefix=$(echo "$line" | cut -d ":" -f1)
-    picture=$(echo "$line" | cut -d ":" -f2 | base64 -d | convert "-" -quality 50 -resize "300x300>" "-" | base64 -w0)
-    echo "$prefix:$picture"
+    width=$(raw_img "$line" | identify -format '%w' -)
+    height=$(raw_img "$line" | identify -format '%h' -)
+    if [ "$width" -le "$max_width" ] && [ "$height" -le "$max_height" ] ; then
+        picture=$(raw_img "$line" | convert "-" -quality 50 -resize "${max_width}x${max_height}>" "-" | base64 -w0)
+        echo "$prefix:$picture"
+    else
+        echo "$line"
+    fi
 }
 
 process_line () {
